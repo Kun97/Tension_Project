@@ -13,8 +13,8 @@ QUES_TYPES = ["what", "when", "where", "who", "why", "how", "yesno", "mixed"]
 
 # Pre-trained model for emotion recognition
 # emotions = ['anger', 'emotion-not-listed', 'fear', 'happiness', 'NE', 'sadness']
-model = load_model(sys.argv[1])
-with open(sys.argv[2], 'rb') as f:
+model = load_model('models/model.h5')
+with open('models/variables.p', 'rb') as f:
     lb, tokenizer_tweets, max_tweet_length, tokenizer_hash_emo, max_hash_emo_length, embeddings_index = pickle.load(f)
 
 
@@ -108,8 +108,8 @@ def IsBoosting(s):
 
 # Generates a csv file containing identified tension points for the provided interview file
 # Input: List of question-answer pairs (Ex: [(q1,a1),(q2,a2),...])
-def tension_analysis(ques_ans):
-    with open(sys.argv[4], mode='w') as f:
+def tension_analysis(ques_ans, Output):
+    with open(Output, mode='w') as f:
         writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['Content', 'Role', 'Predicted Label', 'Timestamps'])
 
@@ -173,16 +173,17 @@ def tension_analysis(ques_ans):
 
 
 if __name__ == "__main__":
-        print("Processing file...")
-        try:
-            processor = Process(sys.argv[3])
-            processor.process_html()
-            ques_ans = processor.extract_ques_ans()
-        except:
-            print("Your file is not in the right format. Please provide valid file.")
-            sys.exit()
-        print("Processing completed...")
+    for i in os.listdir('datasets/Tension_files_English'):    
+        if not i.startswith('.'):
+            print("Processing file {} ...".format(i))
+            
+            try:
+                processor = Process('datasets/Tension_files_English/' + i)
+                processor.process_html()
+                ques_ans = processor.extract_ques_ans()
+                tension_analysis(ques_ans, 'datasets/result/' + i[:-5] + '.csv')
+                print("*** Analysis Completed of {} ***".format(i))
 
-        print("Analyzing...")
-        tension_analysis(ques_ans)
-        print("*** Analysis Completed ***")
+            except:
+                print('Failed: i \n !!!!!!!')
+                continue
